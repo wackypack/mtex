@@ -3,12 +3,13 @@
 #                                             #
 #         Tone Extractor for Python 3         #
 #                                             #
-#    Rev 4b: Fixed IMY exporting;             #
-#              added MLD support.             #
+#    Rev 5: Added support for RIFF files      #
+#           (wav, dls, sf2, rmi)              #
 #                                             #
 #                                             #
 #             Currently supports:             #
 #                                             #
+#         • DLS: Downloadable Sounds          #
 #         • DXM: Feelsound DXM files          #
 #         • IMY: iMelody ringtones            #
 #         • MFM: Panasonic MFM files          #
@@ -16,13 +17,16 @@
 #         • MLD: Melody ringtones             #
 #         • MMF: SMAF ringtones               #
 #         • PMD: AU-PMD ringtones             #
+#         • RMI: RIFF MIDI                    #
+#         • SF2: SoundFont banks              #
+#         • WAV: RIFF Wave                    #
 #                                             #
  ############################################# 
 
 import tkinter as tk
 from tkinter import filedialog
 import os
-from os.path import dirname, basename, splitext, join
+from os.path import dirname, basename, splitext
 
 root = tk.Tk()
 root.withdraw()
@@ -58,6 +62,7 @@ mmfHeader = b"MMMD"
 imyHeader = b"BEGIN:IMELODY"
 imyEof = b"END:IMELODY"
 mxmfHeader = b"XMF_2.00"
+riffHeader = b"RIFF"
 
 # File identifiers ^^
 
@@ -201,7 +206,20 @@ for x in sr:
                     test=True
             if test == True:
                 writeFile(x, chunkSize+3, "mid")
-
+    # Pick up RIFF files.
+    if Bin[x:x+1] == b"R":
+        chunkSize=0
+        # Check for RIFF file.
+        if Bin[x:x+4] == riffHeader:
+            chunkSize=int.from_bytes(Bin[x+4:x+8], "little")
+            if Bin[x+8:x+12] == b"WAVE":
+                writeFile(x, chunkSize+8, "wav")
+            if Bin[x+8:x+12] == b"DLS ":
+                writeFile(x, chunkSize+8, "dls")
+            if Bin[x+8:x+12] == b"SFBK":
+                writeFile(x, chunkSize+8, "sf2")
+            if Bin[x+8:x+12] == b"RMID":
+                writeFile(x, chunkSize+8, "rmi")
 
 print("Found %s total hits." % str(numFiles))
 input("Press Enter to exit")
