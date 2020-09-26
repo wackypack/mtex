@@ -145,26 +145,31 @@ for x in sr:
             if test == True:
                 writeFile(x, chunkSize+3, "mfm")
         # Check for MLD file.
-        if Bin[x:x+4] == mldHeader:
-            check=""
-            test=False
-            while test == False:
-                chunkSize+=1
-                readByte=Bin[x+chunkSize:x+chunkSize+3]
-                if readByte == pmdEof:
-                    try:
-                        check=Bin[x+chunkSize:x+chunkSize+7]
-                        if check == pmdFalseEof:
-                            test=False
-                        else:
-                            test=True
-                    except:
-                        chunkSize+=4
-                        test=True
-                if chunkSize >= size-x:
-                    test=True
-            if test == True:
-                writeFile(x, chunkSize+3, "mld")
+		# MLD detection (along with detection of other file formats)
+		# is not fully implemented. Particularly checking for MLD
+		# files tends to slow the operation greatly. It has been
+		# disabled for now.
+		
+        #if Bin[x:x+4] == mldHeader:
+        #    check=""
+        #    test=False
+        #    while test == False:
+        #        chunkSize+=1
+        #        readByte=Bin[x+chunkSize:x+chunkSize+3]
+        #        if readByte == pmdEof:
+        #            try:
+        #                check=Bin[x+chunkSize:x+chunkSize+7]
+        #                if check == pmdFalseEof:
+        #                    test=False
+        #                else:
+        #                    test=True
+        #            except:
+        #                chunkSize+=4
+        #                test=True
+        #        if chunkSize >= size-x:
+        #            test=True
+        #    if test == True:
+        #        writeFile(x, chunkSize+3, "mld")
                     
     # Pick up DXM, MMF, or MIDI files; headers starting with "M".
     if Bin[x:x+1] == b"M":
