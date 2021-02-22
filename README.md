@@ -1,4 +1,4 @@
-# mtex
+# MultiTone Extractor (mtex)
 Extract various ringtone formats from binary data.
 
 - <b>MTex:</b> Script that searches binary data for ringtone formats, and extracts them accordingly.
