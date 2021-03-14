@@ -1,0 +1,10 @@
+2020/11/24: v2.0a
+	• Re-wrote code to make extraction more efficient
+
+2021/03/06: v2.0b
+	• Updated "supported formats" text
+	• Fixed error detecting .sf2 files
+	• Re-introduced "found %s total hits" text that is displayed when a file is finished being searched
+
+2021/03/13: v2.0c
+	• Fixed an issue that was causing extracted .dxm files to be longer than they should be

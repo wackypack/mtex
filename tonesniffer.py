@@ -2,9 +2,7 @@
 #                                             #
 #                                             #
 #          ToneSniffer for Python 3           #
-#                                             #
-#     Rev 5: Added support for MLD files      #
-#           (wav, dls, sf2, rmi)              #
+#                   v2.0c                     #
 #                                             #
 #                                             #
 #             Currently supports:             #
@@ -12,12 +10,13 @@
 #         • DLS: Downloadable Sounds          #
 #         • DXM: Feelsound DXM files          #
 #         • IMY: iMelody ringtones            #
-#         • MFM: Panasonic MFM files          #
+#         • MFM: Faith MFM files              #
 #         • MID: MIDI files                   #
 #         • MLD: MLD ringtones                #
 #         • MMF: SMAF ringtones               #
 #         • NRT: Nokia ringtones              #
 #         • PMD: AU-PMD ringtones             #
+#         • QCP: Qualcomm audio container     #
 #         • RMI: RIFF MIDI                    #
 #         • SF2: SoundFont banks              #
 #         • WAV: RIFF Wave                    #
@@ -53,7 +52,7 @@ BaseName=splitext(basename(filePath))[0]
 
 Bin=file.read()
 
-outFile=input("Please give a name prefix for output files: ")
+outFile=input("Enter a name prefix for output files: ")
 numFiles=0
 
 sr=iter(range(size))
@@ -94,13 +93,15 @@ for x in sr:
 
         if Bin[x:x+4] == b"MCDF":
             readByte=0
-            while readByte != b"\xFF\x2F\x00":
+            while readByte != b"CTrk":
                 chunkSize+=1
-                readByte=Bin[x+chunkSize:x+chunkSize+3]
+                readByte=Bin[x+chunkSize:x+chunkSize+4]
                 if chunkSize >= size-x:
-                    readByte=b"\xFF\x2F\x00"
-            if readByte == b"\xFF\x2F\x00":
-                writeFile(x, chunkSize+3, "dxm")
+                    break
+            if readByte == b"CTrk":
+                trkLen=int.from_bytes(Bin[x+chunkSize+4:x+chunkSize+8], "big")
+                chunkSize+=trkLen+8
+                writeFile(x, chunkSize, "dxm")
 
         if Bin[x:x+4] == b"cmid":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "big")
@@ -160,3 +161,6 @@ for x in sr:
                     readByte=b"\x07\x0B"
             if readByte == b"\x07\x0B":
                 writeFile(x, chunkSize+2, "nrt")
+
+print("Found %s total hits." % str(numFiles))
+input("Press Enter to exit")
