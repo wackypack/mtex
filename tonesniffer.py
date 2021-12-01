@@ -2,7 +2,7 @@
 #                                             #
 #                                             #
 #          ToneSniffer for Python 3           #
-#                   v2.0c                     #
+#                   v2.0d                     #
 #                                             #
 #                                             #
 #             Currently supports:             #
@@ -37,6 +37,7 @@ findMld=False
 
 
 import tkinter as tk
+import sys
 from tkinter import filedialog
 import os
 from os.path import dirname, basename, splitext
@@ -44,7 +45,11 @@ from os.path import dirname, basename, splitext
 root = tk.Tk()
 root.withdraw()
 
-filePath=filedialog.askopenfilename()
+if len(sys.argv)==2:
+    filePath=sys.argv[1]
+else:
+    filePath=filedialog.askopenfilename()
+
 file=open(filePath,mode='rb')
 size=os.path.getsize(filePath)
 outDir=dirname(filePath)
