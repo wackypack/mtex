@@ -2,7 +2,7 @@
 #                                             #
 #                                             #
 #          ToneSniffer for Python 3           #
-#                   v2.0d                     #
+#                   v2.1                      #
 #                                             #
 #                                             #
 #             Currently supports:             #
@@ -23,16 +23,6 @@
 #                                             #
  #############################################
 
-# Set these variables (True or False, case sensitive) to activate and deactivate searching for certain ringtone formats.
-# NRT and MLD are disabled by default as these tend to return a lot of false positives and slow down the extraction
-# process exponentially.
-
-findNrt=False
-findMmf=True
-findMld=False
-
-# Everything below this is the script. Have fun!
-
 
 
 
@@ -44,6 +34,19 @@ from os.path import dirname, basename, splitext
 
 root = tk.Tk()
 root.withdraw()
+
+def findPrompt(msg):
+    msgPrompt=input("%s (y/n) " % msg)
+    if msgPrompt.lower() == "y":
+        return True
+    elif msgPrompt.lower() == "n":
+        return False
+    while msgPrompt.lower() not in ("y", "n"):
+        msgPrompt=input("%s (type \'y\' or \'n\' - without quotes) " % msg)
+        if msgPrompt.lower() == "y":
+            return True
+        elif msgPrompt.lower() == "n":
+            return False
 
 if len(sys.argv)==2:
     filePath=sys.argv[1]
@@ -58,6 +61,17 @@ BaseName=splitext(basename(filePath))[0]
 Bin=file.read()
 
 outFile=input("Enter a name prefix for output files: ")
+
+findMmf=True
+findImy=False
+findMld=False
+findNrt=False
+
+findMmf=findPrompt("Look for SMAF files?        ")
+findImy=findPrompt("Look for iMelody files?     ")
+findMld=findPrompt("Look for Faith mld files?   ")
+findNrt=findPrompt("Look for Nokia mono ringers?")
+    
 numFiles=0
 
 sr=iter(range(size))
@@ -110,40 +124,45 @@ for x in sr:
 
         if Bin[x:x+4] == b"cmid":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "big")
-            writeFile(x, chunkSize+8, "pmd")
+            if chunkSize >= 16 and chunkSize <= 1048576:
+                writeFile(x, chunkSize+8, "pmd")
 			
         if findMld and Bin[x:x+4] == b"melo":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "big")
-            writeFile(x, chunkSize+8, "mld")
+            if chunkSize >= 16 and chunkSize <= 1048576:
+                writeFile(x, chunkSize+8, "mld")
 
         if Bin[x:x+4] == b"mfmp":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "big")
-            writeFile(x, chunkSize+8, "mfm")
+            if chunkSize >= 16 and chunkSize <= 1048576:
+                writeFile(x, chunkSize+8, "mfm")
 
         if findMmf and Bin[x:x+4] == b"MMMD":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "big")
-            writeFile(x, chunkSize+8, "mmf")
+            if chunkSize >= 16 and chunkSize <= 1048576:
+                writeFile(x, chunkSize+8, "mmf")
 
         if Bin[x:x+4] == b"RIFF":
             chunkSize=int.from_bytes(Bin[x+4:x+8], "little")
-            if Bin[x+8:x+12] == b"WAVE":
-                writeFile(x, chunkSize+8, "wav")
-            if Bin[x+8:x+12] == b"DLS ":
-                writeFile(x, chunkSize+8, "dls")
-            if Bin[x+8:x+12] == b"sfbk":
-                writeFile(x, chunkSize+8, "sf2")
-            if Bin[x+8:x+12] == b"RMID":
-                writeFile(x, chunkSize+8, "rmi")
-            if Bin[x+8:x+12] == b"QLCM":
-                writeFile(x, chunkSize+8, "qcp")
+            if chunkSize >= 16:
+                if Bin[x+8:x+12] == b"WAVE":
+                    writeFile(x, chunkSize+8, "wav")
+                if Bin[x+8:x+12] == b"DLS ":
+                    writeFile(x, chunkSize+8, "dls")
+                if Bin[x+8:x+12] == b"sfbk":
+                    writeFile(x, chunkSize+8, "sf2")
+                if Bin[x+8:x+12] == b"RMID":
+                    writeFile(x, chunkSize+8, "rmi")
+                if Bin[x+8:x+12] == b"QLCM":
+                    writeFile(x, chunkSize+8, "qcp")
 
         if Bin[x:x+13] == b"BEGIN:IMELODY":
             readByte=Bin[x+chunkSize:x+chunkSize+11]
             while readByte != b"END:IMELODY":
                 chunkSize+=1
                 readByte=Bin[x+chunkSize:x+chunkSize+11]
-                if chunkSize >= size-x:
-                    readByte=b"END:IMELODY"
+                if chunkSize >= size-x or chunkSize >= 16384:
+                    break
             if readByte == b"END:IMELODY":
                 writeFile(x, chunkSize+11, "imy")
 
